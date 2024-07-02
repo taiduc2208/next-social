@@ -12,7 +12,7 @@ const Birthdays = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Image
-            src="/albums.png"
+            src="https://images.pexels.com/photos/26741435/pexels-photo-26741435/free-photo-of-bi-n-b-bi-n-nh-ng-ng-i-cat.jpeg?auto=compress&cs=tinysrgb&w=400&lazy=load"
             alt=""
             width={40}
             height={40}

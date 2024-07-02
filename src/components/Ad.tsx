@@ -18,7 +18,7 @@ const Ad = ({ size }: { size: "sm" | "md" | "lg" }) => {
           }`}
         >
           <Image
-            src="/albums.png"
+            src="https://images.pexels.com/photos/7654136/pexels-photo-7654136.jpeg?auto=compress&cs=tinysrgb&w=400&lazy=load"
             alt=""
             fill
             className="rounded-lg object-cover"
