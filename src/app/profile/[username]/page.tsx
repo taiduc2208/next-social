@@ -1,9 +1,44 @@
-import Feed from "@/components/Feed";
+import Feed from "@/components/feed/Feed";
 import LeftMenu from "@/components/leftMenu/LeftMenu";
 import RightMenu from "@/components/rightMenu/RightMenu";
+import prisma from "@/lib/client";
+import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 
-const ProfilePage = () => {
+const ProfilePage = async ({ params }: { params: { username?: string } }) => {
+  const username = params.username;
+  const user = await prisma.user.findFirst({
+    where: {
+      username: username,
+    },
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          followings: true,
+          posts: true,
+        },
+      },
+    },
+  });
+  if (!user) return notFound();
+
+  const { userId: currentUserId } = auth();
+  let isBlocked;
+  if (currentUserId) {
+    const res = await prisma.block.findFirst({
+      where: {
+        blockedId: currentUserId,
+        blockerId: user.id,
+      },
+    });
+    if (res) isBlocked = true;
+    else {
+      isBlocked = false;
+    }
+  }
+  if (isBlocked) return notFound();
   return (
     <div className="flex gap-6 pt-6">
       <div className="hidden xl:block w-[20%]">
@@ -14,13 +49,13 @@ const ProfilePage = () => {
           <div className="p-4 bg-white rounded-lg shadow-sm text-sm flex flex-col items-center justify-center">
             <div className="h-64 w-full relative">
               <Image
-                src="https://images.pexels.com/photos/26842739/pexels-photo-26842739/free-photo-of-mua-he-cay-b-i-v-n-cong-vien.jpeg?auto=compress&cs=tinysrgb&w=400&lazy=load"
+                src={user?.cover || "/noCover.png"}
                 alt=""
                 fill
                 className="rounded-md object-cover "
               />
               <Image
-                src="https://images.pexels.com/photos/26842691/pexels-photo-26842691/free-photo-of-thu-v-t-d-ng-v-t-con-v-t-loai-v-t.jpeg?auto=compress&cs=tinysrgb&w=400&lazy=load"
+                src={user?.avatar || "/noAvatar.png"}
                 alt=""
                 width={128}
                 height={128}
@@ -28,18 +63,28 @@ const ProfilePage = () => {
               />
             </div>
             <div className="flex flex-col items-center justify-center mt-20 mb-4">
-              <span className="font-medium text-2xl">Juan Evans</span>
+              <span className="font-medium text-2xl">
+                {user.name && user.surname
+                  ? user.name + " " + user.surname
+                  : user.username}
+              </span>
               <div className="flex gap-12 my-4">
                 <div className="flex flex-col gap-2 items-center">
-                  <span className="font-semibold text-sm">142</span>
+                  <span className="font-semibold text-sm">
+                    {user._count.posts}
+                  </span>
                   <span className=" text-sm">Posts</span>
                 </div>
                 <div className="flex flex-col gap-2 items-center">
-                  <span className="font-semibold text-sm">1.2K</span>
+                  <span className="font-semibold text-sm">
+                    {user._count.followers}
+                  </span>
                   <span className=" text-sm">Followers</span>
                 </div>
                 <div className="flex flex-col gap-2 items-center">
-                  <span className="font-semibold text-sm">1.4K</span>
+                  <span className="font-semibold text-sm">
+                    {user._count.followings}
+                  </span>
                   <span className=" text-sm">Following</span>
                 </div>
               </div>
@@ -49,7 +94,7 @@ const ProfilePage = () => {
         </div>
       </div>
       <div className="hidden lg:block w-[30%] ">
-        <RightMenu userID="abu" />
+        <RightMenu user={user} />
       </div>
     </div>
   );
