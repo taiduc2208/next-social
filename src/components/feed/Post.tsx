@@ -1,89 +1,64 @@
 import Image from "next/image";
 import Comments from "./Comments";
-const Post = () => {
+import { Post as PostType, User } from "@prisma/client";
+import PostInteraction from "./PostInteraction";
+import { Suspense } from "react";
+import PostInfo from "./PostInfo";
+import { auth } from "@clerk/nextjs/server";
+
+type FeedPostType = PostType & { user: User } & {
+  likes: [{ userId: string }];
+} & {
+  _count: { comments: number };
+};
+
+const Post = ({ post }: { post: FeedPostType }) => {
+  const { userId } = auth();
   return (
-    <div className="flex flex-col gap-4">
-      {/* user */}
-      <div className="w-full flex justify-between items-center ">
+    <div className="p-4 bg-white shadow-md rounded-lg flex flex-col gap-4 mb-12">
+      {/* USER */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Image
-            src="https://images.pexels.com/photos/25785496/pexels-photo-25785496/free-photo-of-g-ngh-thu-t-khong-gian-t-i.jpeg?auto=compress&cs=tinysrgb&w=300&lazy=load"
-            alt=""
+            src={post.user.avatar || "/noAvatar.png"}
             width={40}
             height={40}
+            alt=""
             className="w-10 h-10 rounded-full"
           />
-          <span className="font-medium">Andre Sanders</span>
+          <span className="font-medium">
+            {post.user.name && post.user.surname
+              ? post.user.name + " " + post.user.surname
+              : post.user.username}
+          </span>
         </div>
-        <Image src="/more.png" alt="" width={16} height={16}/>
+        {userId === post.user.id && <PostInfo postId={post.id} />}
       </div>
-      {/* desc */}
+      {/* DESC */}
       <div className="flex flex-col gap-4">
-        <div className="w-full min-h-96 relative">
-          <Image
-            src="https://images.pexels.com/photos/17868210/pexels-photo-17868210/free-photo-of-la-cay-hoa-h-ng-h-ng.jpeg?auto=compress&cs=tinysrgb&w=400&lazy=load"
-            alt=""
-            fill
-            className="object-cover rounded-md"
-          />
-        </div>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. In, placeat
-          eveniet eaque exercitationem accusantium enim vero beatae id odio
-          perspiciatis fugit. Deleniti dolor accusamus saepe harum quibusdam
-          adipisci minus sed.
-        </p>
+        {post.img && (
+          <div className="w-full min-h-96 relative">
+            <Image
+              src={post.img}
+              fill
+              className="object-cover rounded-md"
+              alt=""
+            />
+          </div>
+        )}
+        <p>{post.desc}</p>
       </div>
-      {/* interation */}
-      <div className="flex items-center justify-between text-sm my-4">
-        <div className="flex gap-8">
-          <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
-            <Image
-              src="/like.png"
-              alt=""
-              width={16}
-              height={16}
-              className="cursor-pointer"
-            />
-            <span className="text-gray-300">|</span>
-            <span className="text-gray-500">
-              123
-              <span className="hidden md:inline"> Likes</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
-            <Image
-              src="/comment.png"
-              alt=""
-              width={16}
-              height={16}
-              className="cursor-pointer"
-            />
-            <span className="text-gray-300">|</span>
-            <span className="text-gray-500">
-              456
-              <span className="hidden md:inline"> Comments</span>
-            </span>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
-            <Image
-              src="/share.png"
-              alt=""
-              width={16}
-              height={16}
-              className="cursor-pointer"
-            />
-            <span className="text-gray-300">|</span>
-            <span className="text-gray-500">
-              456
-              <span className="hidden md:inline"> Shares</span>
-            </span>
-          </div>
-        </div>
-      </div>
-      <Comments />
+      {/* INTERACTION */}
+      <Suspense fallback="Loading...">
+        <PostInteraction
+          postId={post.id}
+          likes={post.likes.map((like) => like.userId)}
+          commentNumber={post._count.comments}
+        />
+      </Suspense>
+      <Suspense fallback="Loading...">
+        <Comments postId={post.id} />
+      </Suspense>
     </div>
   );
 };

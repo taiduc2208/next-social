@@ -30,7 +30,7 @@ const Homepage = async () => {
           <Feed/>
         </div>
       </div>
-      <div className="hidden lg:block w-[30%] "><RightMenu user={user} /></div>
+      <div className="hidden lg:block w-[30%] "><RightMenu user={user} type="home" /></div>
       {/* <div className="hidden lg:block w-[30%] "><RightMenu user={user}/></div> */}
     </div>
   )

@@ -6,13 +6,14 @@ import Birthdays from "./Birthdays";
 import FriendRequests from "./FriendRequests";
 
 import { Suspense } from "react";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
-const RightMenu = ({ user }: { user: User }) => {
+const RightMenu = ({ user, type }: { user: User; type:string }) => {
   const userID = user.id;
   return (
     <div className="flex flex-col gap-6">
       {
-        userID ? (
+        userID && (type==="profile") ? (
           <>
           <Suspense fallback="loading...">
             <UserInfoCard user={user}/>
